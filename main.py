@@ -29,7 +29,7 @@ async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
     if text == "Спеціальності":
-        await update.message.reply_text("1")
+        await speciality(update, context)
     elif text == "Допомога":
         await update.message.reply_text("2")
     elif text == "Корисні посилання":
@@ -38,6 +38,25 @@ async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("4")
     elif text == "Розрахунок бала":
         await update.message.reply_text("5")
+    else:
+        await update.message.reply_text("Оберіть рядок")
+
+async def speciality(update: Update, context: ContextTypes.DEFAULT_TYPE):      #Прописати логіку виводу тексту для кожної спеціальності
+    keyboard = [
+        ["A04.09"],
+        ["F1"],
+        ["F3"],
+        ["F4"],
+        ["F5"]
+    ]
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+
+    await update.message.reply_text(
+        "Оберіть спеціальність:",
+        reply_markup=reply_markup
+    )
+
+
 
 app = ApplicationBuilder().token(TOKEN).build()
 
