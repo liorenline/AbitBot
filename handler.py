@@ -1,19 +1,20 @@
-from aiogram import Router, F
+from aiogram import Router
 from aiogram.types import Message
 from aiogram.filters import CommandStart
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 router = Router()
 
-@router.message(CommandStart())   #start
+menu = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="Спеціальності", callback_data="spec")],
+    [InlineKeyboardButton(text="Розрахунок балу", callback_data="calc")],
+    [InlineKeyboardButton(text="FAQ", callback_data="faq")],
+    [InlineKeyboardButton(text="Техпідтримка", callback_data="support")],
+])
+
+@router.message(CommandStart())
 async def start(message: Message):
     await message.answer(
-        "<b>Привіт!</b>\n"
-        "Я бот для абітурієнтів 🎓\n\n"
-        "Напиши щось або обери пункт меню (далі додаси кнопки)"
-    )
-
-@router.message()
-async def echo(message: Message):
-    await message.answer(
-        f"Ти написав: <b>{message.text}</b>"
+        "<b>Привіт!</b>",
+        reply_markup=menu
     )
