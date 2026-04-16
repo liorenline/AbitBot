@@ -1,16 +1,21 @@
 from aiogram import Router
 from aiogram.types import Message
 from aiogram.filters import CommandStart
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 router = Router()
 
-menu = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text="Спеціальності", callback_data="spec")],
-    [InlineKeyboardButton(text="Розрахунок балу", callback_data="calc")],
-    [InlineKeyboardButton(text="FAQ", callback_data="faq")],
-    [InlineKeyboardButton(text="Техпідтримка", callback_data="support")],
-])
+menu = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="Спеціальності")],
+        [KeyboardButton(text="Розрахунок балу")],
+        [KeyboardButton(text="Корисні посилання")],
+        [KeyboardButton(text="FAQ")],
+        [KeyboardButton(text="Техпідтримка")],
+    ],
+    resize_keyboard=True,
+    input_field_placeholder="Оберіть пункт меню..."
+)
 
 @router.message(CommandStart())
 async def start(message: Message):
