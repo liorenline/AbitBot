@@ -1,66 +1,31 @@
+import asyncio
 import logging
+import sys
+from os import getenv
+from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
 from dotenv import load_dotenv
-from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
-import os
+from handler import router
 
 load_dotenv()
-TOKEN = os.getenv("TOKEN")
 
-logging.basicConfig(level=logging.INFO)
+TOKEN = getenv("BOT_TOKEN")
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [
-        ["Спеціальності"],
-        ["Допомога"],
-        ["Корисні посилання"],
-        ["Питання"],
-        ["Розрахунок бала"]
-    ]
 
-    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-
-    await update.message.reply_text(
-        "Привіт, обери питання:",
-        reply_markup=reply_markup
+async def main():
+    bot = Bot(
+        token=TOKEN,
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML)
     )
 
-async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
+    dp = Dispatcher()
 
-    if text == "Спеціальності":
-        await speciality(update, context)
-    elif text == "Допомога":
-        await update.message.reply_text("2")
-    elif text == "Корисні посилання":
-        await update.message.reply_text("3")
-    elif text == "Питання":
-        await update.message.reply_text("4")
-    elif text == "Розрахунок бала":
-        await update.message.reply_text("5")
-    else:
-        await update.message.reply_text("Оберіть рядок")
+    dp.include_router(router)
 
-async def speciality(update: Update, context: ContextTypes.DEFAULT_TYPE):      #Прописати логіку виводу тексту для кожної спеціальності
-    keyboard = [
-        ["A04.09"],
-        ["F1"],
-        ["F3"],
-        ["F4"],
-        ["F5"]
-    ]
-    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-
-    await update.message.reply_text(
-        "Оберіть спеціальність:",
-        reply_markup=reply_markup
-    )
+    await dp.start_polling(bot)
 
 
-
-app = ApplicationBuilder().token(TOKEN).build()
-
-app.add_handler(CommandHandler("start", start))
-app.add_handler(MessageHandler(filters.TEXT, status))
-
-app.run_polling()
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+    asyncio.run(main())
