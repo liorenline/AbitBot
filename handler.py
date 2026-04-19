@@ -4,6 +4,7 @@ from aiogram.filters import CommandStart
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from aiogram.filters import StateFilter
 
 router = Router()
 
@@ -288,9 +289,7 @@ def calculate_kb(
     history: int,
     choice_subject: str,
     choice_score: int,
-    rk: float = 1.04,
 ) -> dict:
-
     k1 = info["к1"]
     k2 = info["к2"]
     k3 = info["к3"]
@@ -301,7 +300,7 @@ def calculate_kb(
     numerator = k1 * ukr + k2 * math + k3 * history + k4 * choice_score
     denominator = k1 + k2 + k3 + (k4_max + k4) / 2
     kb_base = numerator / denominator
-    kb_final = min(kb_base * rk * gk, 200)
+    kb_final = min(kb_base  * gk, 200)
 
     return {
         "kb_base": round(kb_base, 3),
@@ -312,7 +311,6 @@ def calculate_kb(
         "k4": k4,
         "k4_max": k4_max,
         "denominator": round(denominator, 3),
-        "rk": rk,
         "gk": gk,
     }
 
@@ -371,7 +369,8 @@ async def handle_spec_menu(message: Message, state: FSMContext):
     await message.answer("Оберіть спеціальність:", reply_markup=spec_kb)
 
 
-@router.message(F.text.in_(SPEC_NAMES))
+# Показує інфо про спеціальність ЛИШЕ коли FSM не активний (стан = None)
+@router.message(StateFilter(None), F.text.in_(SPEC_NAMES))
 async def handle_spec_info(message: Message, state: FSMContext):
     info = SPECIALTIES_INFO[message.text]
     coef_lines = "\n".join(
@@ -418,6 +417,7 @@ async def handle_score(message: Message, state: FSMContext):
     await message.answer("Оберіть спеціальність для розрахунку:", reply_markup=spec_kb)
 
 
+# Вибір спеціальності під час розрахунку — стан choosing_spec
 @router.message(ScoreForm.choosing_spec)
 async def handle_spec_chosen(message: Message, state: FSMContext):
     if message.text == "Назад":
@@ -451,6 +451,7 @@ async def handle_math(message: Message, state: FSMContext):
     await state.set_state(ScoreForm.entering_history)
     await message.answer("Введіть бал з <b>Історії України</b> (100–200):")
 
+
 @router.message(ScoreForm.entering_history)
 async def handle_history(message: Message, state: FSMContext):
     if not is_valid_score(message.text):
@@ -459,6 +460,7 @@ async def handle_history(message: Message, state: FSMContext):
     await state.update_data(history=int(message.text))
     await state.set_state(ScoreForm.choosing_subject)
     await message.answer("Оберіть предмет за вибором:", reply_markup=subject_kb)
+
 
 @router.message(ScoreForm.choosing_subject)
 async def handle_subject_chosen(message: Message, state: FSMContext):
@@ -472,6 +474,7 @@ async def handle_subject_chosen(message: Message, state: FSMContext):
     await state.update_data(choice_subject=message.text)
     await state.set_state(ScoreForm.entering_choice)
     await message.answer(f"Введіть бал з <b>{message.text}</b> (100–200):")
+
 
 @router.message(ScoreForm.entering_choice)
 async def handle_choice_score(message: Message, state: FSMContext):
@@ -496,8 +499,7 @@ async def finish_calculation(message: Message, state: FSMContext):
 
     await state.clear()
 
-    # Рядок з ГК показуємо лише якщо він відрізняється від 1.0
-    gk_line = f"× ГК ({r['gk']}) = " if r["gk"] != 1.0 else ""
+    gk_line = f"× ГК ({r['gk']}) " if r["gk"] != 1.0 else ""
 
     await message.answer(
         f"<b>Спеціальність:</b> {spec}\n\n"
@@ -508,9 +510,10 @@ async def finish_calculation(message: Message, state: FSMContext):
         f"К4макс = {r['k4_max']}\n"
         f"Знаменник = {r['denominator']}\n\n"
         f"Базовий КБ = {r['kb_base']}\n"
-        f"× РК ({r['rk']}) {gk_line}= <b>Конкурсний бал: {r['kb_final']}</b>",
+        f"× {gk_line}= <b>Конкурсний бал: {r['kb_final']}</b>",
         reply_markup=menu_kb,
     )
+
 
 @router.message(F.text == "Корисні посилання")
 async def handle_links(message: Message, state: FSMContext):
@@ -534,8 +537,9 @@ async def handle_links(message: Message, state: FSMContext):
         "• EPAM: https://careers.epam.ua\n"
         "• ELEKS: https://eleks.com/uk\n"
         "• N-iX: https://www.n-ix.com\n\n",
-        reply_markup=menu_kb
+        reply_markup=menu_kb,
     )
+
 
 @router.message(F.text == "FAQ")
 async def handle_faq(message: Message, state: FSMContext):
@@ -555,6 +559,7 @@ async def handle_faq(message: Message, state: FSMContext):
         reply_markup=menu_kb,
     )
 
+
 @router.message(F.text == "Техпідтримка")
 async def handle_support(message: Message, state: FSMContext):
     await state.clear()
@@ -562,6 +567,7 @@ async def handle_support(message: Message, state: FSMContext):
         "Якщо виникли питання або помилки — напишіть адміністратору.",
         reply_markup=menu_kb,
     )
+
 
 @router.message(F.text == "Назад")
 async def handle_back(message: Message, state: FSMContext):
