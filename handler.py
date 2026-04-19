@@ -14,73 +14,64 @@ class ScoreForm(StatesGroup):
     entering_history = State()
     choosing_subject = State()
     entering_choice = State()
+    asking_prep_course = State()
 
 COEFFICIENTS = {
     "A4.09 | Середня освіта (Інформатика)": {
-        "К1": 0.35,
-        "К2": 0.50,
-        "К3": 0.25,
-        "Іноземна мова": 0.30,
-        "Фізика": 0.50,
-        "Українська література": 0.30,
-        "Біологія": 0.30,
-        "Хімія": 0.40,
-        "Географія": 0.25,
+        "К1": 0.35, "К2": 0.50, "К3": 0.25,
+        "Іноземна мова": 0.30, "Фізика": 0.50,
+        "Українська література": 0.30, "Біологія": 0.30,
+        "Хімія": 0.40, "Географія": 0.25,
+        "особлива_підтримка": True,
     },
     "F1 | Прикладна математика": {
-        "К1": 0.30,
-        "К2": 0.50,
-        "К3": 0.20,
-        "Іноземна мова": 0.30,
-        "Фізика": 0.40,
-        "Українська література": 0.20,
-        "Біологія": 0.20,
-        "Хімія": 0.30,
-        "Географія": 0.20,
+        "К1": 0.30, "К2": 0.50, "К3": 0.20,
+        "Іноземна мова": 0.30, "Фізика": 0.40,
+        "Українська література": 0.20, "Біологія": 0.20,
+        "Хімія": 0.30, "Географія": 0.20,
+        "особлива_підтримка": False,
     },
     "F3 | Комп'ютерні науки": {
-        "К1": 0.30,
-        "К2": 0.50,
-        "К3": 0.20,
-        "Іноземна мова": 0.30,
-        "Фізика": 0.40,
-        "Українська література": 0.20,
-        "Біологія": 0.20,
-        "Хімія": 0.30,
-        "Географія": 0.20,
+        "К1": 0.30, "К2": 0.50, "К3": 0.20,
+        "Іноземна мова": 0.30, "Фізика": 0.40,
+        "Українська література": 0.20, "Біологія": 0.20,
+        "Хімія": 0.30, "Географія": 0.20,
+        "особлива_підтримка": False,
     },
     "F4 | Системний аналіз і науки про дані": {
-        "К1": 0.30,
-        "К2": 0.50,
-        "К3": 0.20,
-        "Іноземна мова": 0.30,
-        "Фізика": 0.40,
-        "Українська література": 0.20,
-        "Біологія": 0.20,
-        "Хімія": 0.30,
-        "Географія": 0.20,
+        "К1": 0.30, "К2": 0.50, "К3": 0.20,
+        "Іноземна мова": 0.30, "Фізика": 0.40,
+        "Українська література": 0.20, "Біологія": 0.20,
+        "Хімія": 0.30, "Географія": 0.20,
+        "особлива_підтримка": False,
     },
     "F5 | Кібербезпека та захист інформації": {
-        "К1": 0.30,
-        "К2": 0.50,
-        "К3": 0.20,
-        "Іноземна мова": 0.30,
-        "Фізика": 0.40,
-        "Українська література": 0.20,
-        "Біологія": 0.20,
-        "Хімія": 0.30,
-        "Географія": 0.20,
+        "К1": 0.30, "К2": 0.50, "К3": 0.20,
+        "Іноземна мова": 0.30, "Фізика": 0.40,
+        "Українська література": 0.20, "Біологія": 0.20,
+        "Хімія": 0.30, "Географія": 0.20,
+        "особлива_підтримка": False,
     },
 }
 
-CHOICE_SUBJECTS = ["Іноземна мова", "Фізика", "Українська література", "Біологія", "Хімія", "Географія"]
+CHOICE_SUBJECTS = [
+    "Іноземна мова", "Фізика", "Українська література",
+    "Біологія", "Хімія", "Географія",
+]
 
 
 def get_k4_max(coef: dict) -> float:
     return max(coef[s] for s in CHOICE_SUBJECTS)
 
 
-def calculate_kb(coef: dict, ukr: int, math: int, history: int, choice_subject: str, choice_score: int) -> float:
+def calculate_kb(
+    coef: dict,
+    ukr: int, math: int, history: int,
+    choice_subject: str, choice_score: int,
+    prep_course: bool,
+    rk: float = 1.04,
+    gk: float = 1.0,
+) -> dict:
     k1 = coef["К1"]
     k2 = coef["К2"]
     k3 = coef["К3"]
@@ -90,9 +81,21 @@ def calculate_kb(coef: dict, ukr: int, math: int, history: int, choice_subject: 
     numerator = k1 * ukr + k2 * math + k3 * history + k4 * choice_score
     denominator = k1 + k2 + k3 + (k4_max + k4) / 2
 
-    kb = numerator / denominator
-    return round(min(kb, 200), 3)
+    kb_base = numerator / denominator
+    kb_with_coef = kb_base * rk * gk
+    ou = 15 if prep_course and coef["особлива_підтримка"] else 0
+    kb_final = min(kb_with_coef + ou, 200)
 
+    return {
+        "kb_base": round(kb_base, 3),
+        "kb_with_coef": round(kb_with_coef, 3),
+        "ou": ou,
+        "kb_final": round(kb_final, 3),
+        "k1": k1, "k2": k2, "k3": k3, "k4": k4,
+        "k4_max": k4_max,
+        "denominator": round(denominator, 3),
+        "rk": rk, "gk": gk,
+    }
 
 menu_kb = ReplyKeyboardMarkup(
     keyboard=[
@@ -131,6 +134,13 @@ subject_kb = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 
+yes_no_kb = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="Так"), KeyboardButton(text="Ні")],
+    ],
+    resize_keyboard=True
+)
+
 
 def is_valid_score(text: str) -> bool:
     return text.isdigit() and 100 <= int(text) <= 200
@@ -160,11 +170,9 @@ async def handle_spec_chosen(message: Message, state: FSMContext):
         await state.clear()
         await message.answer("Головне меню:", reply_markup=menu_kb)
         return
-
     if message.text not in COEFFICIENTS:
         await message.answer("Оберіть спеціальність зі списку:")
         return
-
     await state.update_data(spec=message.text)
     await state.set_state(ScoreForm.entering_ukr)
     await message.answer("Введіть бал з <b>Української мови</b> (100–200):")
@@ -206,11 +214,9 @@ async def handle_subject_chosen(message: Message, state: FSMContext):
         await state.clear()
         await message.answer("Головне меню:", reply_markup=menu_kb)
         return
-
     if message.text not in CHOICE_SUBJECTS:
         await message.answer("Оберіть предмет зі списку:")
         return
-
     await state.update_data(choice_subject=message.text)
     await state.set_state(ScoreForm.entering_choice)
     await message.answer(f"Введіть бал з <b>{message.text}</b> (100–200):")
@@ -221,35 +227,64 @@ async def handle_choice_score(message: Message, state: FSMContext):
     if not is_valid_score(message.text):
         await message.answer("Бал має бути числом від 100 до 200. Спробуйте ще раз:")
         return
+    await state.update_data(choice_score=int(message.text))
 
+    data = await state.get_data()
+    coef = COEFFICIENTS[data["spec"]]
+
+    if coef["особлива_підтримка"]:
+        await state.set_state(ScoreForm.asking_prep_course)
+        await message.answer(
+            "Ця спеціальність має особливу підтримку держави.\n"
+            "Чи закінчили ви підготовчі курси ЛНУ у рік вступу?",
+            reply_markup=yes_no_kb
+        )
+    else:
+        await finish_calculation(message, state, prep_course=False)
+
+
+@router.message(ScoreForm.asking_prep_course, F.text.in_(["Так", "Ні"]))
+async def handle_prep_course(message: Message, state: FSMContext):
+    prep_course = message.text == "Так"
+    await finish_calculation(message, state, prep_course=prep_course)
+
+
+@router.message(ScoreForm.asking_prep_course)
+async def handle_prep_course_invalid(message: Message, state: FSMContext):
+    await message.answer("Оберіть відповідь:", reply_markup=yes_no_kb)
+
+
+async def finish_calculation(message: Message, state: FSMContext, prep_course: bool):
     data = await state.get_data()
     spec = data["spec"]
     ukr = data["ukr"]
     math = data["math"]
     history = data["history"]
     choice_subject = data["choice_subject"]
-    choice_score = int(message.text)
+    choice_score = data["choice_score"]
 
     coef = COEFFICIENTS[spec]
-    k1 = coef["К1"]
-    k2 = coef["К2"]
-    k3 = coef["К3"]
-    k4 = coef[choice_subject]
-    k4_max = get_k4_max(coef)
+    r = calculate_kb(coef, ukr, math, history, choice_subject, choice_score, prep_course)
 
-    kb = calculate_kb(coef, ukr, math, history, choice_subject, choice_score)
+    ou_line = (
+        f"\nБали за підготовчі курси ЛНУ (ОУ): +{r['ou']}"
+        if r["ou"] > 0
+        else "\nПідготовчі курси: не враховуються"
+    )
 
     await state.clear()
     await message.answer(
         f"<b>Спеціальність:</b> {spec}\n\n"
-        f"Українська мова:  {ukr} × {k1} = {ukr * k1:.2f}\n"
-        f"Математика:       {math} × {k2} = {math * k2:.2f}\n"
-        f"Історія України:  {history} × {k3} = {history * k3:.2f}\n"
-        f"{choice_subject}: {choice_score} × {k4} = {choice_score * k4:.2f}\n\n"
-        f"К4макс = {k4_max}\n"
-        f"Знаменник = {k1} + {k2} + {k3} + ({k4_max} + {k4}) / 2 = {k1 + k2 + k3 + (k4_max + k4) / 2:.2f}\n\n"
-        f"<b>Конкурсний бал: {kb:.3f}</b>\n\n"
-        f"Регіональний та галузевий коефіцієнти застосовуються окремо залежно від вишу та пріоритету заяви.",
+        f"Українська мова:  {ukr} × {r['k1']} = {ukr * r['k1']:.2f}\n"
+        f"Математика:       {math} × {r['k2']} = {math * r['k2']:.2f}\n"
+        f"Історія України:  {history} × {r['k3']} = {history * r['k3']:.2f}\n"
+        f"{choice_subject}: {choice_score} × {r['k4']} = {choice_score * r['k4']:.2f}\n\n"
+        f"К4макс = {r['k4_max']}\n"
+        f"Знаменник = {r['denominator']}\n\n"
+        f"Базовий КБ = {r['kb_base']}\n"
+        f"× РК ({r['rk']}) × ГК ({r['gk']}) = {r['kb_with_coef']}"
+        f"{ou_line}\n\n"
+        f"<b>Конкурсний бал: {r['kb_final']}</b>",
         reply_markup=menu_kb
     )
 
