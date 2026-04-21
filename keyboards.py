@@ -6,7 +6,8 @@ menu_kb = ReplyKeyboardMarkup(
         [KeyboardButton(text="Спеціальності")],
         [KeyboardButton(text="Розрахунок балу")],
         [KeyboardButton(text="FAQ")],
-        [KeyboardButton(text="Назад")],
+        [KeyboardButton(text="🔗 Корисні посилання")],
+        [KeyboardButton(text="ℹ️ Про нас")],
     ],
     resize_keyboard=True,
 )
@@ -50,5 +51,11 @@ def get_faq_questions_kb(category: str):
             [KeyboardButton(text=q)]
             for q in FAQ_DATA[category].keys()
         ] + [[KeyboardButton(text="⬅️ Назад")]],
+        resize_keyboard=True,
+    )
+
+def get_links_kb():
+    return ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text="⬅️ Назад")]],
         resize_keyboard=True,
     )
