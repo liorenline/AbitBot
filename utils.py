@@ -31,3 +31,4 @@ def calculate_kb(info, ukr, math, history, choice_subject, choice_score):
 
 def is_valid_score(text: str) -> bool:
     return text.isdigit() and 100 <= int(text) <= 200
+
