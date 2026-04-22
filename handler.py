@@ -92,18 +92,22 @@ async def useful_links(message: Message, state: FSMContext):
     await state.clear()
     await message.answer(
         "<b>Корисні посилання:</b>\n\n"
-        "🎓 <a href='https://admission.lnu.edu.ua/'>Вступ до ЛНУ</a>\n"
+        "🎓 <a href='https://admission.lnu.edu.ua'>Сайт вступної кампанії</a>\n"
         "📚 <a href='https://ami.lnu.edu.ua/'>Сайт факультету</a>\n"
         "📊 <a href='https://abit-poisk.org.ua/'>Абіт-пошук</a>\n"
         "🏛 <a href='https://lnu.edu.ua/'>Сайт університету</a>\n"
-        "💬 <a href='https://t.me/lnu_fami'>Telegram факультету</a>",
-        reply_markup=menu_kb,
+        "🧮 <a href='https://osvita.ua/consultations/konkurs-ball/'>Розрахунок конкурсного балу</a>\n"
+        "🗂 <a href='https://vstup.osvita.ua/'>Вступ.ОСВІТА.UA</a>\n"
+        "📝 <a href='https://testportal.gov.ua/'>УЦОЯО</a>\n"
+        "🔑 <a href='https://my.testportal.gov.ua/cabinet/login'>Кабінет учасника НМТ</a>\n"
+        "📖 <a href='https://ami.lnu.edu.ua/academics/bachelor'>Навчальні плани бакалаврату ФПМІ</a>\n"
+        "📜 <a href='https://testportal.gov.ua/vstupna-kampaniya-2026-oprylyudneno-poryadok-pryjomu-do-zakladiv-vyshhoyi-osvity/'>Порядок прийому до закладів вищої освіти</a>\n"
+        "📞 <a href='https://admission.lnu.edu.ua/admission-board/contacts/'>Контакти приймальної комісії</a>\n",
+    reply_markup=menu_kb,
         parse_mode="HTML"
     )
 
-# ======================
-# FAQ
-# ======================
+
 @router.message(F.text == "FAQ")
 async def faq_start(message: Message, state: FSMContext):
     await state.clear()
@@ -136,9 +140,6 @@ async def back_to_menu(message: Message, state: FSMContext):
     await state.clear()
     await message.answer("Оберіть розділ:", reply_markup=menu_kb)
 
-# ======================
-# СПЕЦІАЛЬНОСТІ
-# ======================
 @router.message(F.text == "Спеціальності")
 async def specs(message: Message, state: FSMContext):
     await state.clear()
@@ -187,9 +188,6 @@ async def back_from_specs(message: Message, state: FSMContext):
     await state.clear()
     await message.answer("Оберіть розділ:", reply_markup=menu_kb)
 
-# ======================
-# РОЗРАХУНОК БАЛУ
-# ======================
 @router.message(F.text == "Розрахунок балу")
 async def score_start(message: Message, state: FSMContext):
     await state.clear()
