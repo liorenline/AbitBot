@@ -3,9 +3,9 @@ from data import FAQ_DATA
 
 menu_kb = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="Спеціальності")],
-        [KeyboardButton(text="Розрахунок балу")],
-        [KeyboardButton(text="FAQ")],
+        [KeyboardButton(text="🎓 Спеціальності")],
+        [KeyboardButton(text="🧮 Розрахунок балу")],
+        [KeyboardButton(text="💬 FAQ")],
         [KeyboardButton(text="🔗 Корисні посилання")],
         [KeyboardButton(text="ℹ️ Про нас")],
     ],

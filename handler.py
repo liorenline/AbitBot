@@ -16,7 +16,7 @@ from keyboards import (
 router = Router()
 
 back_kb = ReplyKeyboardMarkup(
-    keyboard=[[KeyboardButton(text="Назад")]],
+    keyboard=[[KeyboardButton(text="⬅️ Назад")]],
     resize_keyboard=True,
 )
 
@@ -57,36 +57,42 @@ def calculate_kb(info, ukr, math, history, choice_subject, choice_score):
         "gk": gk,
     }
 
-# ======================
-# START
-# ======================
 @router.message(CommandStart())
 async def start(message: Message, state: FSMContext):
     await state.clear()
+    name = message.from_user.first_name
     await message.answer(
-        "Привіт 👋 Я бот факультету прикладної математики та інформатики ЛНУ!\n\nОберіть розділ:",
-        reply_markup=menu_kb
-    )
-
-# ======================
-# ПРО НАС
-# ======================
-@router.message(F.text == "ℹ️ Про нас")
-async def about(message: Message, state: FSMContext):
-    await state.clear()
-    await message.answer(
-        "<b>Факультет прикладної математики та інформатики ЛНУ ім. Івана Франка</b>\n\n"
-        "Факультет готує фахівців у галузі математики, інформатики, кібербезпеки та науки про дані.\n\n"
-        "📍 Львів, вул. Університетська 1\n"
-        "🌐 https://ami.lnu.edu.ua/\n"
-        "📧 ami@lnu.edu.ua",
+        f"Привіт, {name}! 👋\n\n"
+        "Я бот факультету прикладної математики та інформатики ЛНУ ім. Івана Франка.\n\n"
+        "Допоможу розібратись зі спеціальностями, розрахувати конкурсний бал "
+        "і відповісти на поширені запитання про вступ.\n\n"
+        "Обирай розділ 👇",
         reply_markup=menu_kb,
         parse_mode="HTML"
     )
 
-# ======================
-# КОРИСНІ ПОСИЛАННЯ
-# ======================
+@router.message(F.text == "ℹ️ Про нас")
+async def about(message: Message, state: FSMContext):
+    await state.clear()
+    await message.answer(
+        "<b>Факультет прикладної математики та інформатики\n"
+        "ЛНУ ім. Івана Франка</b>\n\n"
+        "ФПМІ готує фахівців у галузі математики, інформатики, "
+        "кібербезпеки та науки про дані.\n\n"
+        "🎓 <b>Спеціальності:</b>\n"
+        "• Середня освіта (Інформатика)\n"
+        "• Прикладна математика\n"
+        "• Комп'ютерні науки\n"
+        "• Системний аналіз і науки про дані\n"
+        "• Кібербезпека та захист інформації\n\n"
+        "📍 Львів, вул. Університетська, 1\n"
+        "🌐 <a href='https://ami.lnu.edu.ua/'>ami.lnu.edu.ua</a>\n"
+        "📧 ami@lnu.edu.ua\n"
+        "📞 <a href='https://ami.lnu.edu.ua/about/contacts/'>Контакти кафедр</a>",
+        reply_markup=menu_kb,
+        parse_mode="HTML"
+    )
+
 @router.message(F.text == "🔗 Корисні посилання")
 async def useful_links(message: Message, state: FSMContext):
     await state.clear()
@@ -106,7 +112,6 @@ async def useful_links(message: Message, state: FSMContext):
     reply_markup=menu_kb,
         parse_mode="HTML"
     )
-
 
 @router.message(F.text == "FAQ")
 async def faq_start(message: Message, state: FSMContext):
@@ -183,7 +188,7 @@ async def spec_info(message: Message, state: FSMContext):
         parse_mode="HTML"
     )
 
-@router.message(F.text == "Назад")
+@router.message(F.text == "⬅️ Назад")
 async def back_from_specs(message: Message, state: FSMContext):
     await state.clear()
     await message.answer("Оберіть розділ:", reply_markup=menu_kb)
@@ -194,7 +199,7 @@ async def score_start(message: Message, state: FSMContext):
     await state.set_state(ScoreForm.choosing_spec)
     await message.answer("Оберіть спеціальність для розрахунку:", reply_markup=spec_kb)
 
-@router.message(ScoreForm.choosing_spec, F.text == "Назад")
+@router.message(ScoreForm.choosing_spec, F.text == "⬅️ Назад")
 async def score_back_from_spec(message: Message, state: FSMContext):
     await state.clear()
     await message.answer("Оберіть розділ:", reply_markup=menu_kb)
@@ -205,7 +210,7 @@ async def score_chose_spec(message: Message, state: FSMContext):
     await state.set_state(ScoreForm.entering_ukr)
     await message.answer("Введіть бал з <b>Української мови</b> (100–200):", reply_markup=back_kb, parse_mode="HTML")
 
-@router.message(ScoreForm.entering_ukr, F.text == "Назад")
+@router.message(ScoreForm.entering_ukr, F.text == "⬅️ Назад")
 async def score_back_to_spec(message: Message, state: FSMContext):
     await state.set_state(ScoreForm.choosing_spec)
     await message.answer("Оберіть спеціальність:", reply_markup=spec_kb)
@@ -219,7 +224,7 @@ async def score_ukr(message: Message, state: FSMContext):
     await state.set_state(ScoreForm.entering_math)
     await message.answer("Введіть бал з <b>Математики</b> (100–200):", reply_markup=back_kb, parse_mode="HTML")
 
-@router.message(ScoreForm.entering_math, F.text == "Назад")
+@router.message(ScoreForm.entering_math, F.text == "⬅️ Назад")
 async def score_back_to_ukr(message: Message, state: FSMContext):
     await state.set_state(ScoreForm.entering_ukr)
     await message.answer("Введіть бал з <b>Української мови</b> (100–200):", reply_markup=back_kb, parse_mode="HTML")
@@ -233,7 +238,7 @@ async def score_math(message: Message, state: FSMContext):
     await state.set_state(ScoreForm.entering_history)
     await message.answer("Введіть бал з <b>Історії України</b> (100–200):", reply_markup=back_kb, parse_mode="HTML")
 
-@router.message(ScoreForm.entering_history, F.text == "Назад")
+@router.message(ScoreForm.entering_history, F.text == "⬅️ Назад")
 async def score_back_to_math(message: Message, state: FSMContext):
     await state.set_state(ScoreForm.entering_math)
     await message.answer("Введіть бал з <b>Математики</b> (100–200):", reply_markup=back_kb, parse_mode="HTML")
@@ -247,7 +252,7 @@ async def score_history(message: Message, state: FSMContext):
     await state.set_state(ScoreForm.choosing_subject)
     await message.answer("Оберіть <b>предмет за вибором</b>:", reply_markup=subject_kb, parse_mode="HTML")
 
-@router.message(ScoreForm.choosing_subject, F.text == "Назад")
+@router.message(ScoreForm.choosing_subject, F.text == "⬅️ Назад")
 async def score_back_to_history(message: Message, state: FSMContext):
     await state.set_state(ScoreForm.entering_history)
     await message.answer("Введіть бал з <b>Історії України</b> (100–200):", reply_markup=back_kb, parse_mode="HTML")
@@ -261,7 +266,7 @@ async def score_subject(message: Message, state: FSMContext):
     await state.set_state(ScoreForm.entering_choice)
     await message.answer(f"Введіть бал з <b>{message.text}</b> (100–200):", reply_markup=back_kb, parse_mode="HTML")
 
-@router.message(ScoreForm.entering_choice, F.text == "Назад")
+@router.message(ScoreForm.entering_choice, F.text == "⬅️ Назад")
 async def score_back_to_subject(message: Message, state: FSMContext):
     await state.set_state(ScoreForm.choosing_subject)
     await message.answer("Оберіть <b>предмет за вибором</b>:", reply_markup=subject_kb, parse_mode="HTML")
