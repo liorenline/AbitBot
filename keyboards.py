@@ -3,11 +3,19 @@ from data import FAQ_DATA
 
 menu_kb = ReplyKeyboardMarkup(
     keyboard=[
+        [KeyboardButton(text="🏛 Про факультет")],
+        [KeyboardButton(text="👥 Про нас"), KeyboardButton(text="🛠 Техпідтримка")],
+    ],
+    resize_keyboard=True,
+)
+
+faculty_kb = ReplyKeyboardMarkup(
+    keyboard=[
         [KeyboardButton(text="🎓 Спеціальності")],
         [KeyboardButton(text="🧮 Розрахунок балу")],
         [KeyboardButton(text="💬 FAQ")],
         [KeyboardButton(text="🔗 Корисні посилання")],
-        [KeyboardButton(text="ℹ️ Про нас")],
+        [KeyboardButton(text="⬅️ Назад")],
     ],
     resize_keyboard=True,
 )
@@ -17,9 +25,9 @@ spec_kb = ReplyKeyboardMarkup(
         [KeyboardButton(text="A4.09 | Середня освіта (Інформатика)")],
         [KeyboardButton(text="F1 | Прикладна математика")],
         [KeyboardButton(text="F3 | Комп'ютерні науки")],
-        [KeyboardButton(text="F4 | Data Science")],
-        [KeyboardButton(text="F5 | Кібербезпека")],
-        [KeyboardButton(text="Назад")],
+        [KeyboardButton(text="F4 | Системний аналіз і науки про дані")],
+        [KeyboardButton(text="F5 | Кібербезпека та захист інформації")],
+        [KeyboardButton(text="⬅️ Назад")],
     ],
     resize_keyboard=True,
 )
@@ -34,7 +42,7 @@ subject_kb = ReplyKeyboardMarkup(
             "Хімія",
             "Географія",
         ]
-    ] + [[KeyboardButton(text="Назад")]],
+    ] + [[KeyboardButton(text="⬅️ Назад")]],
     resize_keyboard=True,
 )
 
