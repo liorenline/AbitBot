@@ -13,7 +13,6 @@ from keyboards import (
     get_faq_questions_kb,
     get_links_kb,
 )
-
 router = Router()
 
 back_kb = ReplyKeyboardMarkup(
@@ -32,11 +31,14 @@ class ScoreForm(StatesGroup):
 
 
 class FAQState(StatesGroup):
-    category = State()
+    browsing_categories = State()  # бачить список категорій
+    category = State()             # вибрав категорію, бачить питання
 
 
 class NavState(StatesGroup):
-    in_faculty = State()
+    in_faculty = State()   # головне підменю факультету
+    in_specs = State()     # всередині спеціальностей
+    in_links = State()     # всередині корисних посилань
 
 
 def is_valid_score(text: str) -> bool:
@@ -68,8 +70,6 @@ def calculate_kb(info, ukr, math, history, choice_subject, choice_score):
     }
 
 
-# ── СТАРТ ──────────────────────────────────────────────────────────────────────
-
 @router.message(CommandStart())
 async def start(message: Message, state: FSMContext):
     await state.clear()
@@ -85,7 +85,6 @@ async def start(message: Message, state: FSMContext):
     )
 
 
-# ── ГОЛОВНЕ МЕНЮ ───────────────────────────────────────────────────────────────
 
 @router.message(F.text == "🏛 Про факультет")
 async def about_faculty(message: Message, state: FSMContext):
@@ -115,14 +114,16 @@ async def about_profburo(message: Message, state: FSMContext):
     await state.clear()
     await message.answer(
         "<b>Профбюро ФПМІ ЛНУ ім. Івана Франка</b>\n\n"
-        "Ми — студентська організація, яка захищає права студентів "
+        "Ми - студентська організація, яка захищає права студентів "
         "та організовує позанавчальне життя факультету.\n\n"
         "📌 <b>Чим займаємось:</b>\n"
         "• Захист прав та інтересів студентів\n"
-        "• Організація культурних і спортивних заходів\n"
-        "• Допомога з гуртожитком і соціальними питаннями\n"
-        "• Хакатони, зустрічі з IT-компаніями\n\n"
-        "📱 <a href='https://t.me/AMIprofburo'>Telegram: @AMIprofburo</a>",
+        "• Організація культурно-масових заходів\n"
+        "• Допомога з гуртожитком і соціальними питаннями\n\n"
+        "🔗 <b>Ми в соцмережах:</b>\n"
+        "✈️ <a href='https://t.me/ami_profburo'>Telegram</a>\n"
+        "📸 <a href='https://www.instagram.com/ami_profburo/'>Instagram</a>\n"
+        "🌐 <a href='https://linktr.ee/ami.profburo.lnu'>Linktree</a>",
         reply_markup=menu_kb,
         parse_mode="HTML"
     )
@@ -133,101 +134,47 @@ async def support(message: Message, state: FSMContext):
     await state.clear()
     await message.answer(
         "🛠 <b>Техпідтримка</b>\n\n"
-        "Якщо у вас виникли проблеми з ботом або є запитання — зв'яжіться з нами:\n\n"
-        "👤 <a href='https://t.me/AMIprofburo'>@AMIprofburo</a>\n\n"
+        "Якщо у вас виникли проблеми з ботом або є запитання — зв'яжіться з нами:\n"
+        "👤 <a href='https://t.me/AMIprofburo'>@AMIprofburo</a>\n"
         "Ми відповімо якнайшвидше 🙂",
         reply_markup=menu_kb,
         parse_mode="HTML"
     )
 
 
-# ── НАЗАД З FACULTY_KB -> MENU_KB (має бути ВИЩЕ глобального назад) ───────────
-
 @router.message(NavState.in_faculty, F.text == "⬅️ Назад")
-async def back_from_faculty(message: Message, state: FSMContext):
+async def back_from_faculty_to_main(message: Message, state: FSMContext):
     await state.clear()
     await message.answer("Оберіть розділ:", reply_markup=menu_kb)
 
 
-# ── ФАКУЛЬТЕТСЬКЕ МЕНЮ ─────────────────────────────────────────────────────────
-
-@router.message(F.text == "🔗 Корисні посилання")
-async def useful_links(message: Message, state: FSMContext):
-    await state.set_state(NavState.in_faculty)
-    await message.answer(
-        "<b>Корисні посилання:</b>\n\n"
-        "🎓 <a href='https://admission.lnu.edu.ua'>Сайт вступної кампанії</a>\n"
-        "📚 <a href='https://ami.lnu.edu.ua/'>Сайт факультету</a>\n"
-        "📊 <a href='https://abit-poisk.org.ua/'>Абіт-пошук</a>\n"
-        "🏛 <a href='https://lnu.edu.ua/'>Сайт університету</a>\n"
-        "🧮 <a href='https://osvita.ua/consultations/konkurs-ball/'>Розрахунок конкурсного балу</a>\n"
-        "🗂 <a href='https://vstup.osvita.ua/'>Вступ.ОСВІТА.UA</a>\n"
-        "📝 <a href='https://testportal.gov.ua/'>УЦОЯО</a>\n"
-        "🔑 <a href='https://my.testportal.gov.ua/cabinet/login'>Кабінет учасника НМТ</a>\n"
-        "📖 <a href='https://ami.lnu.edu.ua/academics/bachelor'>Навчальні плани бакалаврату ФПМІ</a>\n"
-        "📜 <a href='https://testportal.gov.ua/vstupna-kampaniya-2026-oprylyudneno-poryadok-pryjomu-do-zakladiv-vyshhoyi-osvity/'>Порядок прийому до закладів вищої освіти</a>\n"
-        "📞 <a href='https://admission.lnu.edu.ua/admission-board/contacts/'>Контакти приймальної комісії</a>\n",
-        reply_markup=faculty_kb,
-        parse_mode="HTML"
-    )
-
-
-@router.message(F.text == "💬 FAQ")
-async def faq_start(message: Message, state: FSMContext):
-    await state.set_state(NavState.in_faculty)
-    await message.answer("Оберіть категорію:", reply_markup=faq_categories_kb)
-
-
-@router.message(NavState.in_faculty, F.text.in_(FAQ_DATA.keys()))
-async def faq_category_from_faculty(message: Message, state: FSMContext):
-    await state.set_state(FAQState.category)
-    await state.update_data(category=message.text)
-    await message.answer("Оберіть питання:", reply_markup=get_faq_questions_kb(message.text))
-
-
-@router.message(StateFilter(None), F.text.in_(FAQ_DATA.keys()))
-async def faq_category(message: Message, state: FSMContext):
-    await state.set_state(FAQState.category)
-    await state.update_data(category=message.text)
-    await message.answer("Оберіть питання:", reply_markup=get_faq_questions_kb(message.text))
-
-
-@router.message(FAQState.category, F.text == "⬅️ Назад")
-async def faq_back_to_categories(message: Message, state: FSMContext):
-    await state.set_state(NavState.in_faculty)
-    await message.answer("Оберіть категорію:", reply_markup=faq_categories_kb)
-
-
-@router.message(FAQState.category)
-async def faq_answer(message: Message, state: FSMContext):
-    data = await state.get_data()
-    category = data["category"]
-    if message.text in FAQ_DATA[category]:
-        await message.answer(
-            f"<b>{message.text}</b>\n\n{FAQ_DATA[category][message.text]}",
-            reply_markup=get_faq_questions_kb(category),
-            parse_mode="HTML"
-        )
-
-
 @router.message(F.text == "🎓 Спеціальності")
 async def specs(message: Message, state: FSMContext):
-    await state.set_state(NavState.in_faculty)
+    await state.set_state(NavState.in_specs)
     await message.answer("Оберіть спеціальність:", reply_markup=spec_kb)
 
 
-@router.message(NavState.in_faculty, F.text.in_(SPECIALTIES_INFO.keys()))
-async def spec_info_from_faculty(message: Message, state: FSMContext):
+# Назад зі спеціальностей → підменю факультету
+@router.message(NavState.in_specs, F.text == "⬅️ Назад")
+async def back_from_specs(message: Message, state: FSMContext):
+    await state.set_state(NavState.in_faculty)
+    await message.answer("Оберіть розділ:", reply_markup=faculty_kb)
+
+
+# Вибір конкретної спеціальності — лишаємось у in_specs
+@router.message(NavState.in_specs, F.text.in_(SPECIALTIES_INFO.keys()))
+async def spec_info_handler(message: Message, state: FSMContext):
     await _send_spec_info(message, state)
 
 
 @router.message(StateFilter(None), F.text.in_(SPECIALTIES_INFO.keys()))
-async def spec_info(message: Message, state: FSMContext):
+async def spec_info_no_state(message: Message, state: FSMContext):
+    await state.set_state(NavState.in_specs)
     await _send_spec_info(message, state)
 
 
 async def _send_spec_info(message: Message, state: FSMContext):
-    await state.set_state(NavState.in_faculty)
+    await state.set_state(NavState.in_specs)
     info = SPECIALTIES_INFO[message.text]
     careers = "\n".join(f"• {c}" for c in info["careers"])
     links = info["links"]
@@ -265,22 +212,72 @@ async def _send_spec_info(message: Message, state: FSMContext):
     )
 
 
-# ── ГЛОБАЛЬНИЙ НАЗАД (з будь-якого іншого місця) -> faculty_kb ────────────────
+@router.message(F.text == "🔗 Корисні посилання")
+async def useful_links(message: Message, state: FSMContext):
+    await state.set_state(NavState.in_links)
+    await message.answer(
+        "<b>Корисні посилання:</b>\n\n"
+        "🎓 <a href='https://admission.lnu.edu.ua'>Сайт вступної кампанії</a>\n"
+        "📚 <a href='https://ami.lnu.edu.ua/'>Сайт факультету</a>\n"
+        "📊 <a href='https://abit-poisk.org.ua/'>Абіт-пошук</a>\n"
+        "🏛 <a href='https://lnu.edu.ua/'>Сайт університету</a>\n"
+        "🧮 <a href='https://osvita.ua/consultations/konkurs-ball/'>Розрахунок конкурсного балу</a>\n"
+        "🗂 <a href='https://vstup.osvita.ua/'>Вступ.ОСВІТА.UA</a>\n"
+        "📝 <a href='https://testportal.gov.ua/'>УЦОЯО</a>\n"
+        "🔑 <a href='https://my.testportal.gov.ua/cabinet/login'>Кабінет учасника НМТ</a>\n"
+        "📖 <a href='https://ami.lnu.edu.ua/academics/bachelor'>Навчальні плани бакалаврату ФПМІ</a>\n"
+        "📜 <a href='https://testportal.gov.ua/vstupna-kampaniya-2026-oprylyudneno-poryadok-pryjomu-do-zakladiv-vyshhoyi-osvity/'>Порядок прийому до закладів вищої освіти</a>\n"
+        "📞 <a href='https://admission.lnu.edu.ua/admission-board/contacts/'>Контакти приймальної комісії</a>\n",
+        reply_markup=faculty_kb,
+        parse_mode="HTML"
+    )
 
-@router.message(F.text == "⬅️ Назад")
-async def back_to_faculty(message: Message, state: FSMContext):
+@router.message(NavState.in_links, F.text == "⬅️ Назад")
+async def back_from_links(message: Message, state: FSMContext):
     await state.set_state(NavState.in_faculty)
     await message.answer("Оберіть розділ:", reply_markup=faculty_kb)
 
 
-# ── РОЗРАХУНОК БАЛУ ────────────────────────────────────────────────────────────
+@router.message(F.text == "💬 FAQ")
+async def faq_start(message: Message, state: FSMContext):
+    await state.set_state(FAQState.browsing_categories)
+    await message.answer("Оберіть категорію:", reply_markup=faq_categories_kb)
+
+@router.message(FAQState.browsing_categories, F.text == "⬅️ Назад")
+async def faq_back_to_faculty(message: Message, state: FSMContext):
+    await state.set_state(NavState.in_faculty)
+    await message.answer("Оберіть розділ:", reply_markup=faculty_kb)
+
+
+@router.message(FAQState.browsing_categories, F.text.in_(FAQ_DATA.keys()))
+async def faq_choose_category(message: Message, state: FSMContext):
+    await state.set_state(FAQState.category)
+    await state.update_data(category=message.text)
+    await message.answer("Оберіть питання:", reply_markup=get_faq_questions_kb(message.text))
+
+
+@router.message(FAQState.category, F.text == "⬅️ Назад")
+async def faq_back_to_categories(message: Message, state: FSMContext):
+    await state.set_state(FAQState.browsing_categories)
+    await message.answer("Оберіть категорію:", reply_markup=faq_categories_kb)
+
+@router.message(FAQState.category)
+async def faq_answer(message: Message, state: FSMContext):
+    data = await state.get_data()
+    category = data["category"]
+    if message.text in FAQ_DATA[category]:
+        await message.answer(
+            f"<b>{message.text}</b>\n\n{FAQ_DATA[category][message.text]}",
+            reply_markup=get_faq_questions_kb(category),
+            parse_mode="HTML"
+        )
+
 
 @router.message(F.text == "🧮 Розрахунок балу")
 async def score_start(message: Message, state: FSMContext):
     await state.clear()
     await state.set_state(ScoreForm.choosing_spec)
     await message.answer("Оберіть спеціальність для розрахунку:", reply_markup=spec_kb)
-
 
 @router.message(ScoreForm.choosing_spec, F.text == "⬅️ Назад")
 async def score_back_from_spec(message: Message, state: FSMContext):
@@ -396,5 +393,19 @@ async def score_choice(message: Message, state: FSMContext):
         f"Базовий КБ: <b>{result['kb_base']}</b>{gk_text}\n\n"
         f"✅ <b>Конкурсний бал: {result['kb_final']}</b>",
         reply_markup=faculty_kb,
+        parse_mode="HTML"
+    )
+
+F6_KEY = "F6 | 🚧 (в розробці)"
+
+@router.message(F.text == F6_KEY)
+async def f6_coming_soon(message: Message, state: FSMContext):
+    await state.set_state(NavState.in_specs)
+    await message.answer(
+        "🚧 <b>F6 — в розробці</b>\n\n"
+        "Ця спеціальність ще формується. "
+        "Інформація про неї з'явиться найближчим часом.\n\n"
+        "Слідкуйте за оновленнями! 👀",
+        reply_markup=spec_kb,
         parse_mode="HTML"
     )

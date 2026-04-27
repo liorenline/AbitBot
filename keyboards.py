@@ -27,6 +27,7 @@ spec_kb = ReplyKeyboardMarkup(
         [KeyboardButton(text="F3 | Комп'ютерні науки")],
         [KeyboardButton(text="F4 | Системний аналіз і науки про дані")],
         [KeyboardButton(text="F5 | Кібербезпека та захист інформації")],
+        [KeyboardButton(text="F6 | Інтелектуальні системи та машинне навчання")],
         [KeyboardButton(text="⬅️ Назад")],
     ],
     resize_keyboard=True,
