@@ -31,14 +31,14 @@ class ScoreForm(StatesGroup):
 
 
 class FAQState(StatesGroup):
-    browsing_categories = State()  # бачить список категорій
-    category = State()             # вибрав категорію, бачить питання
+    browsing_categories = State()
+    category = State()
 
 
 class NavState(StatesGroup):
-    in_faculty = State()   # головне підменю факультету
-    in_specs = State()     # всередині спеціальностей
-    in_links = State()     # всередині корисних посилань
+    in_faculty = State()
+    in_specs = State()
+    in_links = State()
 
 
 def is_valid_score(text: str) -> bool:
@@ -83,7 +83,6 @@ async def start(message: Message, state: FSMContext):
         reply_markup=menu_kb,
         parse_mode="HTML"
     )
-
 
 
 @router.message(F.text == "🏛 Про факультет")
@@ -154,14 +153,12 @@ async def specs(message: Message, state: FSMContext):
     await message.answer("Оберіть спеціальність:", reply_markup=spec_kb)
 
 
-# Назад зі спеціальностей → підменю факультету
 @router.message(NavState.in_specs, F.text == "⬅️ Назад")
 async def back_from_specs(message: Message, state: FSMContext):
     await state.set_state(NavState.in_faculty)
     await message.answer("Оберіть розділ:", reply_markup=faculty_kb)
 
 
-# Вибір конкретної спеціальності — лишаємось у in_specs
 @router.message(NavState.in_specs, F.text.in_(SPECIALTIES_INFO.keys()))
 async def spec_info_handler(message: Message, state: FSMContext):
     await _send_spec_info(message, state)
@@ -176,40 +173,54 @@ async def spec_info_no_state(message: Message, state: FSMContext):
 async def _send_spec_info(message: Message, state: FSMContext):
     await state.set_state(NavState.in_specs)
     info = SPECIALTIES_INFO[message.text]
-    careers = "\n".join(f"• {c}" for c in info["careers"])
     links = info["links"]
+
+    careers_text = ""
+    if info.get("careers"):
+        careers = "\n".join(f"• {c}" for c in info["careers"])
+        careers_text = f"\n\n💼 <b>Кар'єра:</b>\n{careers}"
 
     partners_text = ""
     if info.get("partners"):
         partners_text = "\n\n🤝 <b>Партнери:</b>\n" + "\n".join(f"• {p}" for p in info["partners"])
 
+    tuition_text = ""
+    if info.get("tuition"):
+        tuition_text = f"\n\n💰 <b>Контракт:</b> {info['tuition']} грн/рік"
+
+    coeff_text = ""
+    if info.get("coefficients"):
+        coeff_text = "\n\n📊 <b>Коефіцієнти:</b>\n" + "\n".join(
+            f"• {k}: {v}" for k, v in info["coefficients"].items()
+        )
+
+    # Формуємо посилання — додаємо тільки ті що є і не є заглушкою
+    links_parts = []
+    if links.get("admission") and links["admission"] != "https://ami.lnu.edu.ua/academics/bachelor#":
+        links_parts.append(f"• <a href='{links['admission']}'>Вступ</a>")
+    if links.get("program"):
+        links_parts.append(f"• <a href='{links['program']}'>Навчальна програма</a>")
+    if links.get("abitposhuk") and links["abitposhuk"] != "https://abit-poisk.org.ua/":
+        links_parts.append(f"• <a href='{links['abitposhuk']}'>Абіт-пошук (рейтинг)</a>")
+    if links.get("itcluster"):
+        links_parts.append(f"• <a href='{links['itcluster']}'>IT Cluster</a>")
+
+    links_text = ""
+    if links_parts:
+        links_text = "\n\n🔗 <b>Посилання:</b>\n" + "\n".join(links_parts)
+
     text = (
         f"<b>{message.text}</b>\n\n"
         f"🏫 {info['faculty']}\n\n"
-        f"📖 <b>Про спеціальність:</b>\n{info['about']}\n\n"
-        f"💼 <b>Кар'єра:</b>\n{careers}\n\n"
-        f"💰 <b>Контракт:</b> {info['tuition']} грн/рік"
+        f"📖 <b>Про спеціальність:</b>\n{info['about']}"
+        f"{careers_text}"
         f"{partners_text}"
+        f"{tuition_text}"
+        f"{coeff_text}"
+        f"{links_text}"
     )
 
-    coeff_text = "\n\n📊 <b>Коефіцієнти:</b>\n" + "\n".join(
-        f"• {k}: {v}" for k, v in info["coefficients"].items()
-    )
-
-    links_text = (
-        f"\n\n🔗 <b>Посилання:</b>\n"
-        f"• <a href='{links['admission']}'>Вступ</a>\n"
-        f"• <a href='{links['program']}'>Навчальна програма</a>\n"
-        f"• <a href='{links['abitposhuk']}'>Абіт-пошук (рейтинг)</a>"
-    )
-    if "itcluster" in links:
-        links_text += f"\n• <a href='{links['itcluster']}'>IT Cluster</a>"
-
-    await message.answer(
-        text + coeff_text + links_text,
-        reply_markup=spec_kb,
-        parse_mode="HTML"
-    )
+    await message.answer(text, reply_markup=spec_kb, parse_mode="HTML")
 
 
 @router.message(F.text == "🔗 Корисні посилання")
@@ -232,6 +243,7 @@ async def useful_links(message: Message, state: FSMContext):
         parse_mode="HTML"
     )
 
+
 @router.message(NavState.in_links, F.text == "⬅️ Назад")
 async def back_from_links(message: Message, state: FSMContext):
     await state.set_state(NavState.in_faculty)
@@ -242,6 +254,7 @@ async def back_from_links(message: Message, state: FSMContext):
 async def faq_start(message: Message, state: FSMContext):
     await state.set_state(FAQState.browsing_categories)
     await message.answer("Оберіть категорію:", reply_markup=faq_categories_kb)
+
 
 @router.message(FAQState.browsing_categories, F.text == "⬅️ Назад")
 async def faq_back_to_faculty(message: Message, state: FSMContext):
@@ -261,6 +274,7 @@ async def faq_back_to_categories(message: Message, state: FSMContext):
     await state.set_state(FAQState.browsing_categories)
     await message.answer("Оберіть категорію:", reply_markup=faq_categories_kb)
 
+
 @router.message(FAQState.category)
 async def faq_answer(message: Message, state: FSMContext):
     data = await state.get_data()
@@ -279,6 +293,7 @@ async def score_start(message: Message, state: FSMContext):
     await state.set_state(ScoreForm.choosing_spec)
     await message.answer("Оберіть спеціальність для розрахунку:", reply_markup=spec_kb)
 
+
 @router.message(ScoreForm.choosing_spec, F.text == "⬅️ Назад")
 async def score_back_from_spec(message: Message, state: FSMContext):
     await state.set_state(NavState.in_faculty)
@@ -287,6 +302,14 @@ async def score_back_from_spec(message: Message, state: FSMContext):
 
 @router.message(ScoreForm.choosing_spec, F.text.in_(SPECIALTIES_INFO.keys()))
 async def score_chose_spec(message: Message, state: FSMContext):
+    # F6 ще не має коефіцієнтів — не дозволяємо розрахунок
+    info = SPECIALTIES_INFO[message.text]
+    if not any(info["к4"].values()):
+        await message.answer(
+            "🚧 Для цієї спеціальності коефіцієнти ще не визначені — розрахунок недоступний.",
+            reply_markup=spec_kb
+        )
+        return
     await state.update_data(spec=message.text)
     await state.set_state(ScoreForm.entering_ukr)
     await message.answer("Введіть бал з <b>Української мови</b> (100–200):", reply_markup=back_kb, parse_mode="HTML")
@@ -393,19 +416,5 @@ async def score_choice(message: Message, state: FSMContext):
         f"Базовий КБ: <b>{result['kb_base']}</b>{gk_text}\n\n"
         f"✅ <b>Конкурсний бал: {result['kb_final']}</b>",
         reply_markup=faculty_kb,
-        parse_mode="HTML"
-    )
-
-F6_KEY = "F6 | 🚧 (в розробці)"
-
-@router.message(F.text == F6_KEY)
-async def f6_coming_soon(message: Message, state: FSMContext):
-    await state.set_state(NavState.in_specs)
-    await message.answer(
-        "🚧 <b>F6 — в розробці</b>\n\n"
-        "Ця спеціальність ще формується. "
-        "Інформація про неї з'явиться найближчим часом.\n\n"
-        "Слідкуйте за оновленнями! 👀",
-        reply_markup=spec_kb,
         parse_mode="HTML"
     )
