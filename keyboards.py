@@ -5,6 +5,7 @@ menu_kb = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="🏛 Про факультет")],
         [KeyboardButton(text="👥 Про нас"), KeyboardButton(text="🛠 Техпідтримка")],
+[KeyboardButton(text="👤 Посилання на чат абітурієнтів")],
     ],
     resize_keyboard=True,
 )

@@ -140,6 +140,17 @@ async def support(message: Message, state: FSMContext):
         parse_mode="HTML"
     )
 
+@router.message(F.text == "👤 Посилання на чат абітурієнтів")
+async def support(message: Message, state: FSMContext):
+    await state.clear()
+    await message.answer(
+        "👤 <b>Посилання на чат абітурієнтів</b>\n\n"
+        "Наразі є реєстраційна форма\n"
+        "<a href='https://forms.gle/EPvXmN5RLet7rTEs7'>Реєстрація</a>\n",
+        reply_markup=menu_kb,
+        parse_mode="HTML"
+    )
+
 
 @router.message(NavState.in_faculty, F.text == "⬅️ Назад")
 async def back_from_faculty_to_main(message: Message, state: FSMContext):
