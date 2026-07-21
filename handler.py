@@ -429,3 +429,17 @@ async def score_choice(message: Message, state: FSMContext):
         reply_markup=faculty_kb,
         parse_mode="HTML"
     )
+
+
+# Fallback: ловить будь-яке повідомлення, яке не підійшло під жоден хендлер.
+# Потрібен, бо стан FSM зберігається в пам'яті й обнуляється після кожного
+# передеплою — тоді кнопки, прив'язані до стану ("⬅️ Назад", питання FAQ тощо),
+# перестають відповідати. Замість тиші повертаємо користувача в головне меню,
+# щоб не доводилось щоразу натискати /start.
+@router.message()
+async def fallback(message: Message, state: FSMContext):
+    await state.clear()
+    await message.answer(
+        "Оберіть розділ 👇",
+        reply_markup=menu_kb,
+    )
